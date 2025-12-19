@@ -1,0 +1,17 @@
+bindPort = ${FRP_BIND_PORT}
+bindAddr = "0.0.0.0"
+
+vhostHTTPPort = ${FRP_VHOST_HTTP_PORT}
+vhostHTTPSPort = ${FRP_VHOST_HTTPS_PORT}
+
+auth.method = "token"
+auth.token = "${FRP_TOKEN}"
+
+webServer.addr = "127.0.0.1"
+webServer.port = ${FRP_WEB_PORT}
+webServer.user = "${FRP_WEB_USER}"
+webServer.password = "${FRP_WEB_PASSWORD}"
+
+log.to = "/var/log/frp/frps.log"
+log.level = "${LOG_LEVEL}"
+log.maxDays = ${LOG_MAX_DAYS}

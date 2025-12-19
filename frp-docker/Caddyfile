@@ -1,0 +1,57 @@
+{
+    # 填寫 Email 用於 Let's Encrypt 通知
+    email {$EMAIL}
+    
+    # ✅ On-Demand TLS 配置 - 使用 Caddy 內部端點驗證（無需額外服務）
+    on_demand_tls {
+        ask http://127.0.0.1:2019/check
+    }
+}
+
+# 內部驗證端點（只監聽 localhost，不對外開放）
+:2019 {
+    bind 127.0.0.1
+    
+    @valid_domain {
+        # 允許主域名和所有子域名
+        expression {query.domain} == "{$DOMAIN}" || {query.domain}.endsWith(".{$DOMAIN}")
+    }
+    
+    handle @valid_domain {
+        respond "OK" 200
+    }
+    
+    handle {
+        respond "Forbidden" 403
+    }
+}
+
+# 主域名
+{$DOMAIN} {
+    respond "FRP Server is running - {$DOMAIN}" 200
+}
+
+# 匹配所有子網域
+*.{$DOMAIN} {
+    tls {
+        on_demand
+    }
+
+    # 將流量轉給 frps 的 HTTP Port
+    reverse_proxy frps:8080 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+
+# 你的 Dashboard 入口 (可選)
+dashboard.{$DOMAIN} {
+    reverse_proxy frps:7500 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}

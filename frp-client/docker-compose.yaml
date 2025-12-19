@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  frpc:
+    image: snowdreamtech/frpc:0.52.3
+    container_name: frpc
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./frpc.toml:/etc/frp/frpc.toml:ro
+      - ./logs:/var/log/frp
+    environment:
+      - TZ=${TZ:-Asia/Taipei}
+    command: -c /etc/frp/frpc.toml
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
