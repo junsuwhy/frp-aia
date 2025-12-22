@@ -30,15 +30,17 @@ services:
       - "${CADDY_HTTP_PORT:-80}:80"
       - "${CADDY_HTTPS_PORT:-443}:443"
       - "${CADDY_HTTPS_PORT:-443}:443/udp"
-      # 🔒 安全性：移除 Admin Port 外露
-      # - "${CADDY_ADMIN_PORT:-2019}:2019"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./caddy/data:/data
       - ./caddy/config:/config
+      - ./install-files:/app/install-files:ro
     environment:
       - DOMAIN=${DOMAIN}
       - EMAIL=${EMAIL}
+      - INSTALL_PATH=${INSTALL_PATH:-frp-install}
+      - FRP_TOKEN=${FRP_TOKEN}
+      - ALLOWED_IPS=${ALLOWED_IPS:-127.0.0.1}
       - TZ=${TZ:-Asia/Taipei}
     depends_on:
       - frps

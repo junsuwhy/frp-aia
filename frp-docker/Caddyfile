@@ -31,14 +31,11 @@
     respond "FRP Server is running - {$DOMAIN}" 200
 }
 
-# 匹配所有子網域
-*.{$DOMAIN} {
-    tls {
-        on_demand
-    }
+# ⚠️ 具體的子域名要放在通配符之前！
 
-    # 將流量轉給 frps 的 HTTP Port
-    reverse_proxy frps:8080 {
+# 你的 Dashboard 入口 (可選)
+dashboard.{$DOMAIN} {
+    reverse_proxy frps:7500 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
@@ -46,9 +43,58 @@
     }
 }
 
-# 你的 Dashboard 入口 (可選)
-dashboard.{$DOMAIN} {
-    reverse_proxy frps:7500 {
+# 安裝檔案下載端點（僅限指定 IP 訪問）
+# 訪問方式：https://install.{$DOMAIN}/{$INSTALL_PATH}/install.sh
+install.{$DOMAIN} {
+    tls {
+        on_demand
+    }
+
+    @allowed {
+        remote_ip {$ALLOWED_IPS}
+    }
+
+    handle @allowed {
+        # 提供 frpc-config.json
+        handle /{$INSTALL_PATH}/frpc-config.json {
+            header Content-Type "application/json"
+            respond `{
+  "server": "{$DOMAIN}",
+  "token": "{$FRP_TOKEN}"
+}` 200
+        }
+
+        # 提供靜態檔案（install.sh, install.ps1, 二進位檔案）
+        handle /{$INSTALL_PATH}/* {
+            uri strip_prefix /{$INSTALL_PATH}
+            root * /app/install-files
+            file_server browse
+        }
+
+        # 根路徑提示
+        handle {
+            respond "Please access /{$INSTALL_PATH}/ for installation files" 200
+        }
+    }
+
+    # ⚠️ 排除 ACME challenge 路徑，讓 Caddy 自動處理 Let's Encrypt 驗證
+    @not_acme {
+        not path /.well-known/acme-challenge/*
+    }
+
+    handle @not_acme {
+        respond "Access Denied" 403
+    }
+}
+
+# 匹配所有其他子網域（這個要放在最後！）
+*.{$DOMAIN} {
+    tls {
+        on_demand
+    }
+
+    # 將流量轉給 frps 的 HTTP Port
+    reverse_proxy frps:8080 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
