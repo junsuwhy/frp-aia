@@ -23,18 +23,22 @@ curl -fsSL https://your-domain.com/install.sh | bash
 
 ### Windows (PowerShell)
 
-**方式 1: 直接傳參安裝**
+**方式 1: 從 URL 讀取配置（推薦）**
 ```powershell
-irm https://your-domain.com/install.ps1 | iex -ArgumentList "-Server test.domain.com -Token abc123"
+iex "& { $(irm https://your-domain.com/install.ps1) } -ConfigUrl 'https://your-domain.com/config.json'"
 ```
 
-**方式 2: 從 URL 讀取配置（推薦）**
+**方式 2: 直接傳參安裝**
 ```powershell
-$params = @{Server=""; Token=""; ConfigUrl="https://your-domain.com/config.json"}
-irm https://your-domain.com/install.ps1 | iex @params
+iex "& { $(irm https://your-domain.com/install.ps1) } -Server 'test.domain.com' -Token 'abc123'"
 ```
 
-**方式 3: 下載後運行**
+**方式 3: 互動式安裝（無參數）**
+```powershell
+irm https://your-domain.com/install.ps1 | iex
+```
+
+**方式 4: 下載後運行**
 ```powershell
 Invoke-WebRequest -Uri https://your-domain.com/install.ps1 -OutFile install.ps1
 .\install.ps1 -Server "test.domain.com" -Token "abc123"
@@ -44,12 +48,23 @@ Invoke-WebRequest -Uri https://your-domain.com/install.ps1 -OutFile install.ps1
 
 將此檔案托管在您的伺服器上（例如：`https://123.123.123.123/config.json`）：
 
+**方式 1: 使用 token（明文）**
 ```json
 {
   "server": "testdomain.ccom",
   "token": "your_secret_token_here"
 }
 ```
+
+**方式 2: 使用 token_encoded（Base64 編碼，推薦）**
+```json
+{
+  "server": "testdomain.ccom",
+  "token_encoded": "eW91cl9zZWNyZXRfdG9rZW5faGVyZQ=="
+}
+```
+
+> **注意**：如果同時提供 `token` 和 `token_encoded`，安裝腳本會優先使用 `token_encoded`（會自動解碼）。
 
 ## 🔧 使用示例
 
@@ -76,8 +91,8 @@ frp-tool rm myapp
 ### Linux / macOS
 
 ```bash
-# 1) 到安裝時所在目錄（會有 client/；部分舊版可能叫 frp-client/）
-cd /path/to/your/install-dir/client 2>/dev/null || cd /path/to/your/install-dir/frp-client
+# 1) 到配置目錄
+cd ~/.frp-client
 
 # 2) 停止並移除 frpc 容器
 docker compose down

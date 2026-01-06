@@ -48,11 +48,37 @@ if ($ConfigUrl) {
     
     try {
         $ConfigJson = Invoke-RestMethod -Uri $ConfigUrl -UseBasicParsing
+        
+        # 讀取 server
         $Server = $ConfigJson.server
+        
+        # 優先使用 token_encoded (base64 編碼)，如果沒有則使用 token
+        $TokenEncoded = $ConfigJson.token_encoded
         $Token = $ConfigJson.token
         
-        if (-not $Server -or -not $Token) {
-            Write-Err "配置檔案中缺少 server 或 token"
+        # 如果有 token_encoded，則解碼它
+        if ($TokenEncoded) {
+            try {
+                $TokenBytes = [Convert]::FromBase64String($TokenEncoded)
+                $Token = [System.Text.Encoding]::UTF8.GetString($TokenBytes)
+                Write-Info "已從 token_encoded 解碼 token"
+            }
+            catch {
+                Write-Err "無法解碼 token_encoded: $_"
+                return
+            }
+        }
+        
+        # 驗證必要欄位
+        if (-not $Server) {
+            Write-Err "配置檔案中缺少 server 欄位"
+            Write-Err "配置內容: $($ConfigJson | ConvertTo-Json -Compress)"
+            return
+        }
+        
+        if (-not $Token) {
+            Write-Err "配置檔案中缺少 token 或 token_encoded 欄位"
+            Write-Err "配置內容: $($ConfigJson | ConvertTo-Json -Compress)"
             return
         }
         
@@ -60,6 +86,7 @@ if ($ConfigUrl) {
     }
     catch {
         Write-Err "無法讀取配置檔案: $_"
+        Write-Err "請確認 URL 可訪問且返回有效的 JSON 格式"
         return
     }
 }
