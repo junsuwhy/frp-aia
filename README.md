@@ -150,6 +150,12 @@ cd cli
 │   └── caddy/             # 反向代理
 ├── scripts/                # 各種腳本
 └── docs/                   # 文檔
+
+~/.frp-client/              # 客戶端配置 (frp-tool 自動創建)
+├── frpc.toml               # 客戶端配置文件
+├── docker-compose.yaml     # Docker Compose 配置
+├── .env                    # 環境變數
+└── logs/                   # 日誌目錄
 ```
 
 ## 快速開始
@@ -333,11 +339,11 @@ FRP_MANAGER_PORT=5000
 ### 客戶端日誌
 
 ```bash
-cd ~/frp/client
+cd ~/.frp-client
 docker-compose logs -f
 
 # 或直接查看日誌文件
-tail -f ~/frp/client/logs/frpc.log
+tail -f ~/.frp-client/logs/frpc.log
 ```
 
 ### 服務端日誌
@@ -411,7 +417,7 @@ docker-compose logs caddy | grep -i certificate
 1. 驗證 Token 配置
 ```bash
 # 客戶端和服務端的 token 必須一致
-grep token ~/frp/client/frpc.toml
+grep token ~/.frp-client/frpc.toml
 grep token ~/frp/server/frps/frps.toml
 ```
 

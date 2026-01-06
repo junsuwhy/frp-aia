@@ -21,7 +21,7 @@ import (
 // 設定區
 // ==========================================
 var (
-	workDir    string // 將在 init() 中設定為當前工作目錄
+	workDir    string // 將在 init() 中設定為 ~/.frp-client
 	envFile    string
 	configFile string
 	
@@ -32,15 +32,15 @@ var (
 
 // init 初始化工作目錄路徑（支援跨平台）
 func init() {
-	// 取得當前工作目錄
-	cwd, err := os.Getwd()
+	// 取得使用者家目錄
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "無法取得當前目錄: %v\n", err)
+		fmt.Fprintf(os.Stderr, "無法取得家目錄: %v\n", err)
 		os.Exit(1)
 	}
 	
-	// 設定 client 為工作目錄（在當前目錄下）
-	workDir = filepath.Join(cwd, "client")
+	// 設定工作目錄為家目錄下的 .frp-client
+	workDir = filepath.Join(homeDir, ".frp-client")
 	envFile = filepath.Join(workDir, ".env")
 	configFile = filepath.Join(workDir, "frpc.toml")
 }

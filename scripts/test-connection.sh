@@ -261,13 +261,13 @@ elif [ "$HTTP_CODE" = "404" ]; then
     echo "   docker ps | grep frpc"
     echo ""
     echo "2. 檢查 frpc 配置:"
-    echo "   cat ~/client/frpc.toml"
+    echo "   cat ~/.frp-client/frpc.toml"
     echo "   確認 customDomains = [\"$FULL_DOMAIN\"]"
     echo ""
     echo "3. 檢查 frpc 連接狀態:"
     echo "   docker logs frpc | grep login"
     echo "   或"
-    echo "   tail -f ~/client/logs/frpc.log"
+    echo "   tail -f ~/.frp-client/logs/frpc.log"
     
 elif [ "$HTTP_CODE" = "502" ] || [ "$HTTP_CODE" = "503" ]; then
     echo "⚠️  frps 代理已註冊，但無法連接到 VM 服務"
@@ -290,5 +290,5 @@ fi
 echo ""
 echo "提示: 日誌檔案位置"
 echo "  伺服器端: $LOG_FILE"
-echo "  VM 端: ~/client/logs/frpc.log (如果有配置)"
+echo "  客戶端: ~/.frp-client/logs/frpc.log (如果有配置)"
 echo ""

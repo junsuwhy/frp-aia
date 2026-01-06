@@ -29,3 +29,4 @@ test-config.json
 # OS
 .DS_Store
 Thumbs.db
+server/caddy/config/autosave.json

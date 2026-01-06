@@ -209,7 +209,7 @@ show_usage() {
     echo "  2. 列出通道:  frp-tool ls"
     echo "  3. 移除通道:  frp-tool rm <name>"
     echo ""
-    echo "配置位置: $(pwd)/client/"
+    echo "配置位置: ~/.frp-client/"
     echo ""
 }
 
