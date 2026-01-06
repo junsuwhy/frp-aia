@@ -1,2 +1,31 @@
 **logs
 .env
+server/caddy/data
+server/.env
+client/frpc.toml
+client/.env
+archive
+
+# Binaries
+frp-tool
+frp-tool.exe
+*.exe
+dist/
+
+# Go
+*.o
+*.a
+*.so
+
+# Test files
+test-config.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

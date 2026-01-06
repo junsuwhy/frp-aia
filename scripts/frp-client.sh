@@ -4,7 +4,7 @@ set -e
 # ==========================================
 # 設定區
 # ==========================================
-WORK_DIR="$PWD/frp-client"
+WORK_DIR="$PWD/client"
 ENV_FILE="$WORK_DIR/.env"
 CONFIG_FILE="$WORK_DIR/frpc.toml"
 

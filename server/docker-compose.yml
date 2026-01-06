@@ -40,6 +40,7 @@ services:
       - EMAIL=${EMAIL}
       - INSTALL_PATH=${INSTALL_PATH:-frp-install}
       - FRP_TOKEN=${FRP_TOKEN}
+      - FRP_TOKEN_BASE64=${FRP_TOKEN_BASE64}
       - ALLOWED_IPS=${ALLOWED_IPS:-127.0.0.1}
       - TZ=${TZ:-Asia/Taipei}
     depends_on:

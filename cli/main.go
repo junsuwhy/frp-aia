@@ -21,14 +21,29 @@ import (
 // 設定區
 // ==========================================
 var (
-	workDir    = "./frp-client"
-	envFile    = filepath.Join(workDir, ".env")
-	configFile = filepath.Join(workDir, "frpc.toml")
+	workDir    string // 將在 init() 中設定為當前工作目錄
+	envFile    string
+	configFile string
 	
 	// 從環境變數讀取，如果沒有則使用預設值
 	serverDomain string
 	serverToken  string
 )
+
+// init 初始化工作目錄路徑（支援跨平台）
+func init() {
+	// 取得當前工作目錄
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "無法取得當前目錄: %v\n", err)
+		os.Exit(1)
+	}
+	
+	// 設定 client 為工作目錄（在當前目錄下）
+	workDir = filepath.Join(cwd, "client")
+	envFile = filepath.Join(workDir, ".env")
+	configFile = filepath.Join(workDir, "frpc.toml")
+}
 
 // ==========================================
 // TOML 結構定義
@@ -225,9 +240,23 @@ func checkDocker() error {
 	return nil
 }
 
-func restartContainer() error {
-	logInfo("正在重啟 frpc...")
-	cmd := exec.Command("docker", "compose", "restart", "frpc")
+func startOrRestartContainer() error {
+	// 檢查容器是否已存在
+	checkCmd := exec.Command("docker", "compose", "ps", "-q", "frpc")
+	checkCmd.Dir = workDir
+	output, _ := checkCmd.Output()
+
+	var cmd *exec.Cmd
+	if len(output) > 0 {
+		// 容器已存在，使用 restart
+		logInfo("正在重啟 frpc...")
+		cmd = exec.Command("docker", "compose", "restart", "frpc")
+	} else {
+		// 容器不存在，使用 up -d
+		logInfo("正在啟動 frpc...")
+		cmd = exec.Command("docker", "compose", "up", "-d", "frpc")
+	}
+
 	cmd.Dir = workDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -366,9 +395,9 @@ func runAdd(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	// 重啟容器
-	if err := restartContainer(); err != nil {
-		logError("重啟容器失敗: " + err.Error())
+	// 啟動/重啟容器
+	if err := startOrRestartContainer(); err != nil {
+		logError("啟動/重啟容器失敗: " + err.Error())
 		os.Exit(1)
 	}
 
@@ -427,9 +456,9 @@ func runRemove(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	// 重啟容器
-	if err := restartContainer(); err != nil {
-		logError("重啟容器失敗: " + err.Error())
+	// 啟動/重啟容器
+	if err := startOrRestartContainer(); err != nil {
+		logError("啟動/重啟容器失敗: " + err.Error())
 		os.Exit(1)
 	}
 

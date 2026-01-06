@@ -1,0 +1,18 @@
+bindPort = 7000
+bindAddr = "0.0.0.0"
+
+vhostHTTPPort = 8080
+vhostHTTPSPort = 8443
+
+auth.method = "token"
+auth.token = "YOUR_SECRET_TOKEN_HERE"
+
+# 🔧 修正：改為 0.0.0.0 讓 Docker 內部網路可以訪問
+webServer.addr = "0.0.0.0"
+webServer.port = 7500
+webServer.user = "admin"
+webServer.password = "YOUR_DASHBOARD_PASSWORD"
+
+log.to = "/var/log/frp/frps.log"
+log.level = "info"
+log.maxDays = 7

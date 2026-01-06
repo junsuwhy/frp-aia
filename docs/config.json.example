@@ -1,0 +1,4 @@
+{
+  "server": "testdomain.ccom",
+  "token": "your_secret_token_here"
+}

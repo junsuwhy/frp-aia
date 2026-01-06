@@ -18,7 +18,7 @@
 ## � 目錄結構
 
 ```
-frp-docker/
+server/
 ├── .env                # 環境變數配置（敏感資訊）
 ├── .env.example        # 環境變數範例
 ├── docker-compose.yml  # Docker Compose 配置
@@ -48,7 +48,7 @@ FRP_WEB_PASSWORD=your-admin-password
 ### 2. 啟動服務
 
 ```bash
-cd frp-docker
+cd server
 docker-compose up -d
 ```
 

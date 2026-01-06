@@ -55,12 +55,13 @@ install.{$DOMAIN} {
     }
 
     handle @allowed {
-        # 提供 frpc-config.json
+        # 提供 frpc-config.json（token 使用 base64 編碼）
         handle /{$INSTALL_PATH}/frpc-config.json {
             header Content-Type "application/json"
-            respond `{
+            @tokenEncoded expression `{http.request.uri.query.raw} == "true"`
+            respond @tokenEncoded `{
   "server": "{$DOMAIN}",
-  "token": "{$FRP_TOKEN}"
+  "token_encoded": "{$FRP_TOKEN_BASE64}"
 }` 200
         }
 

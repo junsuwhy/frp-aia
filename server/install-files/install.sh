@@ -10,7 +10,7 @@ set -e
 # ==========================================
 # 設定區
 # ==========================================
-SERVER_URL="https://install.test7362.aiacademy.tw/frp-install"  # 請替換為您的伺服器 URL
+SERVER_URL="https://install.your-domain.com/frp-install"  # 請替換為您的伺服器 URL
 VERSION="latest"
 INSTALL_DIR="/usr/local/bin"
 BINARY_NAME="frp-tool"
@@ -60,19 +60,28 @@ done
 if [ -n "$CONFIG_URL" ]; then
     log_info "從 ${CONFIG_URL} 讀取配置..."
     
+    # 從 CONFIG_URL 推斷 SERVER_URL (移除檔案名稱)
+    SERVER_URL="${CONFIG_URL%/*}"
+    log_info "使用伺服器 URL: ${SERVER_URL}"
+    
     # 下載配置檔案
     CONFIG_JSON=$(curl -fsSL "$CONFIG_URL")
     
     # 解析 JSON (使用 jq 或 python)
     if command -v jq &> /dev/null; then
         SERVER=$(echo "$CONFIG_JSON" | jq -r '.server // empty')
-        TOKEN=$(echo "$CONFIG_JSON" | jq -r '.token // empty')
+        TOKEN_ENCODED=$(echo "$CONFIG_JSON" | jq -r '.token_encoded // empty')
     elif command -v python3 &> /dev/null; then
         SERVER=$(echo "$CONFIG_JSON" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('server', ''))")
-        TOKEN=$(echo "$CONFIG_JSON" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('token', ''))")
+        TOKEN_ENCODED=$(echo "$CONFIG_JSON" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('token_encoded', ''))")
     else
         log_error "需要 jq 或 python3 來解析 JSON 配置"
         exit 1
+    fi
+    
+    # 解碼 base64 token
+    if [ -n "$TOKEN_ENCODED" ]; then
+        TOKEN=$(echo "$TOKEN_ENCODED" | base64 -d 2>/dev/null || echo "")
     fi
     
     if [ -z "$SERVER" ] || [ -z "$TOKEN" ]; then
@@ -200,7 +209,7 @@ show_usage() {
     echo "  2. 列出通道:  frp-tool ls"
     echo "  3. 移除通道:  frp-tool rm <name>"
     echo ""
-    echo "配置位置: $(pwd)/frp-client/"
+    echo "配置位置: $(pwd)/client/"
     echo ""
 }
 
