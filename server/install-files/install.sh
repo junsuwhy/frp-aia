@@ -179,6 +179,46 @@ download_binary() {
 # 執行初始化
 # ==========================================
 run_init() {
+    local CLIENT_DIR="$HOME/.frp-client"
+    local CONFIG_FILE="$CLIENT_DIR/frpc.toml"
+    local OLD_PROXIES=""
+    local HAS_PROXIES=0
+    
+    # 檢查是否已經安裝過且配置檔案存在
+    if [ -d "$CLIENT_DIR" ] && [ -f "$CONFIG_FILE" ]; then
+        log_warn "檢測到已存在的配置檔案: $CONFIG_FILE"
+        
+        # 提取現有的 [[proxies]] 配置（使用文本處理）
+        # 從第一個 [[proxies]] 開始，提取到文件結尾或下一個頂級區塊（以 [[ 開頭但不是 [[proxies]]）
+        if grep -q "^\[\[proxies\]\]" "$CONFIG_FILE" 2>/dev/null; then
+            # 使用 awk 提取 [[proxies]] 區塊
+            # 從 [[proxies]] 開始，直到遇到下一個頂級區塊或文件結尾
+            OLD_PROXIES=$(awk '
+                /^\[\[proxies\]\]/ { 
+                    flag=1
+                    print
+                    next
+                }
+                flag {
+                    # 如果遇到新的頂級區塊（以 [[ 開頭但不是 [[proxies]]），停止
+                    if (/^\[\[/ && !/^\[\[proxies\]\]/) {
+                        exit
+                    }
+                    print
+                }
+            ' "$CONFIG_FILE" 2>/dev/null)
+            
+            if [ -n "$OLD_PROXIES" ]; then
+                # 檢查是否真的有內容（不只是 [[proxies]] 標題）
+                # 過濾掉 [[proxies]] 標題行和空行，檢查是否還有其他內容
+                if echo "$OLD_PROXIES" | grep -v "^\[\[proxies\]\]$" | grep -v "^$" | grep -q "."; then
+                    HAS_PROXIES=1
+                    log_info "檢測到現有的通道配置，將在初始化後保留"
+                fi
+            fi
+        fi
+    fi
+    
     log_info "正在執行初始化..."
     
     # 檢查 Docker
@@ -192,6 +232,24 @@ run_init() {
     if ! frp-tool init --server "$SERVER" --token "$TOKEN"; then
         log_error "初始化失敗"
         exit 1
+    fi
+    
+    # 如果有舊的 proxies 配置，合併回去
+    if [ $HAS_PROXIES -eq 1 ] && [ -n "$OLD_PROXIES" ]; then
+        log_info "正在合併現有的通道配置..."
+        
+        # 移除新配置中的 proxies = [] 行（避免與 [[proxies]] 衝突）
+        # 使用 sed 或 awk 移除包含 "proxies = []" 的行
+        if grep -q "proxies = \[\]" "$CONFIG_FILE" 2>/dev/null; then
+            # 使用 sed 移除該行
+            sed -i.tmp '/^proxies = \[\]$/d' "$CONFIG_FILE" 2>/dev/null
+            rm -f "$CONFIG_FILE.tmp" 2>/dev/null
+        fi
+        
+        # 追加舊的 [[proxies]] 配置
+        echo "" >> "$CONFIG_FILE"
+        echo "$OLD_PROXIES" >> "$CONFIG_FILE"
+        log_info "✅ 已成功合併現有通道配置"
     fi
     
     log_info "✅ 初始化完成！"

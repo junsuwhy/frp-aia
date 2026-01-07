@@ -173,6 +173,63 @@ catch {
 # ==========================================
 # 執行初始化
 # ==========================================
+$ClientDir = "$env:USERPROFILE\.frp-client"
+$ConfigFile = "$ClientDir\frpc.toml"
+$OldProxies = $null
+$HasProxies = $false
+
+# 檢查是否已經安裝過且配置檔案存在
+if (Test-Path $ClientDir) {
+    if (Test-Path $ConfigFile) {
+        Write-Warn "檢測到已存在的配置檔案: $ConfigFile"
+        
+        # 提取現有的 [[proxies]] 配置（使用文本處理）
+        try {
+            $ConfigLines = Get-Content $ConfigFile
+            $InProxiesBlock = $false
+            $ProxiesLines = @()
+            
+            foreach ($line in $ConfigLines) {
+                # 檢測到 [[proxies]] 開始
+                if ($line -match '^\[\[proxies\]\]') {
+                    $InProxiesBlock = $true
+                    $ProxiesLines += $line
+                    continue
+                }
+                
+                # 如果在 proxies 區塊中
+                if ($InProxiesBlock) {
+                    # 如果遇到新的頂級區塊（以 [[ 開頭但不是 [[proxies]]），停止
+                    if ($line -match '^\[\[' -and $line -notmatch '^\[\[proxies\]\]') {
+                        break
+                    }
+                    $ProxiesLines += $line
+                }
+            }
+            
+            if ($ProxiesLines.Count -gt 0) {
+                # 檢查是否真的有內容（不只是 [[proxies]] 標題）
+                $HasContent = $false
+                foreach ($line in $ProxiesLines) {
+                    if ($line -notmatch '^\[\[proxies\]\]$' -and $line.Trim() -ne '') {
+                        $HasContent = $true
+                        break
+                    }
+                }
+                
+                if ($HasContent) {
+                    $OldProxies = $ProxiesLines -join "`n"
+                    $HasProxies = $true
+                    Write-Info "檢測到現有的通道配置，將在初始化後保留"
+                }
+            }
+        }
+        catch {
+            Write-Warn "無法讀取現有配置: $_"
+        }
+    }
+}
+
 Write-Info "正在執行初始化..."
 
 try {
@@ -182,6 +239,32 @@ try {
 catch {
     Write-Err "初始化失敗: $_"
     return
+}
+
+# 如果有舊的 proxies 配置，合併回去
+if ($HasProxies -and $OldProxies) {
+    Write-Info "正在合併現有的通道配置..."
+    
+    try {
+        # 讀取新的配置檔案
+        $NewConfigLines = Get-Content $ConfigFile
+        
+        # 移除新配置中的 proxies = [] 行（避免與 [[proxies]] 衝突）
+        $FilteredLines = $NewConfigLines | Where-Object { $_ -notmatch '^proxies = \[\]$' }
+        
+        # 寫回過濾後的配置
+        $FilteredLines | Set-Content -Path $ConfigFile
+        
+        # 追加舊的 [[proxies]] 配置
+        Add-Content -Path $ConfigFile -Value ""
+        Add-Content -Path $ConfigFile -Value $OldProxies
+        
+        Write-Info "✅ 已成功合併現有通道配置"
+    }
+    catch {
+        Write-Warn "合併配置時發生錯誤: $_"
+        Write-Warn "舊的通道配置可能未完全保留，請手動檢查 $ConfigFile"
+    }
 }
 
 # ==========================================
