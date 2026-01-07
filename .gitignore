@@ -11,6 +11,7 @@ frp-tool
 frp-tool.exe
 *.exe
 dist/
+!server/install-files/frp-tool-*
 
 # Go
 *.o

@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -204,6 +205,18 @@ func checkPort(port int) bool {
 }
 
 // ==========================================
+// 取得 LocalIP（根據作業系統）
+// ==========================================
+func getLocalIP() string {
+	// Linux 使用 127.0.0.1
+	// Windows 和 Mac 使用 host.docker.internal
+	if runtime.GOOS == "linux" {
+		return "127.0.0.1"
+	}
+	return "host.docker.internal"
+}
+
+// ==========================================
 // TOML 讀取與寫入
 // ==========================================
 func readConfig() (*FRPCConfig, error) {
@@ -383,7 +396,7 @@ func runAdd(cmd *cobra.Command, args []string) {
 	proxy := ProxyConfig{
 		Name:          name,
 		Type:          "http",
-		LocalIP:       "127.0.0.1",
+		LocalIP:       getLocalIP(),
 		LocalPort:     port,
 		CustomDomains: []string{fullDomain},
 	}
