@@ -28,6 +28,7 @@
 
 # 主域名
 {$DOMAIN} {
+    header X-Robots-Tag "noindex, nofollow"
     respond "FRP Server is running - {$DOMAIN}" 200
 }
 
@@ -35,6 +36,7 @@
 
 # 你的 Dashboard 入口 (可選)
 dashboard.{$DOMAIN} {
+    header X-Robots-Tag "noindex, nofollow"
     reverse_proxy frps:7500 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
@@ -46,6 +48,7 @@ dashboard.{$DOMAIN} {
 # 安裝檔案下載端點（僅限指定 IP 訪問）
 # 訪問方式：https://install.{$DOMAIN}/{$INSTALL_PATH}/install.sh
 install.{$DOMAIN} {
+    header X-Robots-Tag "noindex, nofollow"
     tls {
         on_demand
     }
@@ -90,6 +93,7 @@ install.{$DOMAIN} {
 
 # 匹配所有其他子網域（這個要放在最後！）
 *.{$DOMAIN} {
+    header X-Robots-Tag "noindex, nofollow"
     tls {
         on_demand
     }
