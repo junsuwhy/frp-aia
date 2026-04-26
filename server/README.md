@@ -15,37 +15,60 @@
 2. **防火牆**：開放 80, 443, 7000 端口
 3. **Docker & Docker Compose**
 
-## � 目錄結構
+## 📁 目錄結構
 
 ```
 server/
-├── .env                # 環境變數配置（敏感資訊）
-├── .env.example        # 環境變數範例
-├── docker-compose.yml  # Docker Compose 配置
-├── frps.toml          # FRP 伺服器配置
-├── Caddyfile          # Caddy 反向代理配置
-├── logs/              # FRP 日誌目錄
-└── .gitignore         # Git 忽略文件
+├── .env                        # 環境變數配置（敏感資訊，不進 git）
+├── .env.example                # 環境變數範例
+├── generate-config.sh          # 從 .env 產生所有配置檔
+├── docker-compose.yml          # Docker Compose 配置
+├── frps/
+│   └── frps.toml.template      # FRP 伺服器配置範本
+├── frps.toml                   # FRP 伺服器配置（由 generate-config.sh 產生）
+├── Caddyfile                   # Caddy 反向代理配置
+├── install-files/
+│   ├── install.sh.template     # 安裝腳本範本
+│   ├── install.sh              # 安裝腳本（由 generate-config.sh 產生）
+│   ├── install.ps1             # Windows 安裝腳本
+│   └── frp-tool-*              # 各平台 frp-tool 二進位檔
+└── .gitignore
 ```
 
-## �🚀 快速開始
+## 🚀 快速開始
 
-### 1. 修改配置
+### 1. 設定環境變數
 
-編輯 `.env` 文件：
+複製範本並填入實際設定：
 
 ```bash
-# 修改為你的域名
+cp .env.example .env
+```
+
+編輯 `.env`：
+
+```bash
 DOMAIN=yourdomain.com
 EMAIL=your-email@example.com
 
-# 設定強密碼（重要！）
 FRP_TOKEN=your-strong-password-here
 FRP_WEB_USER=admin
 FRP_WEB_PASSWORD=your-admin-password
 ```
 
-### 2. 啟動服務
+### 2. 產生配置檔
+
+**每次修改 `.env` 後都需要執行**，以確保 `frps.toml` 和 `install.sh` 內容與設定一致：
+
+```bash
+./generate-config.sh
+```
+
+這會產生：
+- `frps.toml`：FRP 伺服器配置
+- `install-files/install.sh`：填入正確 domain 的用戶端安裝腳本
+
+### 3. 啟動服務
 
 ```bash
 cd server

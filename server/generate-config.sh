@@ -10,14 +10,16 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-# source .env
+# 載入 .env 並匯出變數
+export $(grep -v '^#' .env | xargs)
 
 # 生成 frps.toml
-export $(grep -v '^#' .env | xargs) && envsubst < frps/frps.toml.template > frps.toml
-echo "✓ 已生成 frps/frps.toml"
+envsubst < frps/frps.toml.template > frps.toml
+echo "✓ 已生成 frps.toml"
 
-# 生成 Caddyfile（如果需要動態內容）
-# envsubst < caddy/Caddyfile.template > caddy/Caddyfile
-# echo "✓ 已生成 caddy/Caddyfile"
+# 生成 install.sh（將 DOMAIN 和 INSTALL_PATH 填入 SERVER_URL）
+envsubst '${DOMAIN} ${INSTALL_PATH}' < install-files/install.sh.template > install-files/install.sh
+chmod +x install-files/install.sh
+echo "✓ 已生成 install-files/install.sh"
 
 echo "配置檔案生成完成！"

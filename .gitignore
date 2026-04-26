@@ -18,6 +18,9 @@ dist/
 *.a
 *.so
 
+# Generated from template (contains domain-specific SERVER_URL)
+server/install-files/install.sh
+
 # Test files
 test-config.json
 
