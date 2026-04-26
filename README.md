@@ -17,10 +17,10 @@
 
 ```bash
 # 方式 1: 直接傳參
-curl -fsSL https://install.your-domain.com/install.sh | bash -s -- --server test.domain.com --token abc123
+curl -fsSL https://install.your-domain.com/frp-tool/install.sh | bash -s -- --server test.domain.com --token abc123
 
 # 方式 2: 從 URL 讀取配置（推薦批量部署）
-curl -fsSL https://install.your-domain.com/install.sh | bash -s -- --config https://install.your-domain.com/config.json
+curl -fsSL https://install.your-domain.com/frp-tool/install.sh | bash -s -- --config https://install.your-domain.com/frp-tool/frpc-config.json
 ```
 
 ### Windows (PowerShell)
